@@ -9,13 +9,39 @@ const color = {
 const $ = sel => document.querySelector(sel);
 const $$ = sel => document.querySelectorAll(sel);
 
+// Dependency-free letter splitter (replaces the deprecated SplitText trial).
+// Builds the same structure: .line > .word > .char, which the CSS corner brackets rely on.
+function splitChars(el) {
+  const text = el.textContent.trim();
+  el.textContent = '';
+  const chars = [];
+  const line = document.createElement('div');
+  line.className = 'line line1';
+  line.style.display = 'block';
+  line.style.position = 'relative';
+  text.split(/\s+/).forEach((w, wi) => {
+    const word = document.createElement('div');
+    word.className = 'word word' + (wi + 1);
+    word.style.display = 'inline-block';
+    word.style.position = 'relative';
+    Array.from(w).forEach(ch => {
+      const c = document.createElement('div');
+      c.className = 'char';
+      c.style.display = 'inline-block';
+      c.style.position = 'relative';
+      c.textContent = ch;
+      word.appendChild(c);
+      chars.push(c);
+    });
+    line.appendChild(word);
+  });
+  el.appendChild(line);
+  return chars;
+}
+
 function introAnimation() {
   const duration = 4;
-  const { chars } = new SplitText('#header h1 span', {
-    type: 'lines, words, chars',
-    linesClass: 'line line++',
-    wordsClass: 'word word++',
-    charsClass: 'char' });
+  const chars = splitChars($('#header h1 span'));
 
 
   const easeOutElastic = Elastic.easeOut.config(1, 1);
