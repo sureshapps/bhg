@@ -9,39 +9,8 @@ const color = {
 const $ = sel => document.querySelector(sel);
 const $$ = sel => document.querySelectorAll(sel);
 
-// Dependency-free letter splitter (replaces the deprecated SplitText trial).
-// Builds the same structure: .line > .word > .char, which the CSS corner brackets rely on.
-function splitChars(el) {
-  const text = el.textContent.trim();
-  el.textContent = '';
-  const chars = [];
-  const line = document.createElement('div');
-  line.className = 'line line1';
-  line.style.display = 'block';
-  line.style.position = 'relative';
-  text.split(/\s+/).forEach((w, wi) => {
-    const word = document.createElement('div');
-    word.className = 'word word' + (wi + 1);
-    word.style.display = 'inline-block';
-    word.style.position = 'relative';
-    Array.from(w).forEach(ch => {
-      const c = document.createElement('div');
-      c.className = 'char';
-      c.style.display = 'inline-block';
-      c.style.position = 'relative';
-      c.textContent = ch;
-      word.appendChild(c);
-      chars.push(c);
-    });
-    line.appendChild(word);
-  });
-  el.appendChild(line);
-  return chars;
-}
-
 function introAnimation() {
   const duration = 4;
-  const chars = splitChars($('#header h1 span'));
 
 
   const easeOutElastic = Elastic.easeOut.config(1, 1);
@@ -258,9 +227,6 @@ function introAnimation() {
     } },
   0.1, duration * 0.66)
 
-  // Title: S U R E S H
-  .add(titleIntro(chars), duration * 0.33)
-
   // UI-Text 
   .add('textBox', duration * 0.66).
   staggerFromTo(textBox, 5, {
@@ -307,36 +273,6 @@ function introAnimation() {
   2);
 }
 
-
-// ---------- SURESH title (GSAP) ----------
-const TITLE_REST = { color: '#d9d9e0', textShadow: '0 0 12px rgba(255,255,255,0.35)' };
-const TITLE_GLOW = { color: '#ffffff', textShadow: '0 0 45px rgba(255,255,255,0.95)' };
-
-function titleIntro(chars) {
-  TweenMax.set(chars, { autoAlpha: 0, transformPerspective: 700, transformOrigin: '50% 100%' });
-  const tl = new TimelineMax({ onComplete: () => titleShimmer(chars) });
-
-  // 1. letters drop in one by one, flipping up from the baseline
-  tl.staggerFromTo(chars, 1.1, {
-    autoAlpha: 0, y: -90, rotationX: -110, scale: 1.7,
-    color: '#ffffff', textShadow: '0 0 0 rgba(255,255,255,0)' },
-  {
-    autoAlpha: 1, y: 0, rotationX: 0, scale: 1,
-    ease: Back.easeOut.config(1.6) },
-  0.14, 0)
-  // 2. a white flash sweeps through S-U-R-E-S-H
-  .staggerTo(chars, 0.3, Object.assign({ ease: Sine.easeOut }, TITLE_GLOW), 0.1, 0.9)
-  // 3. ...and settles back to the soft grey-white
-  .staggerTo(chars, 0.7, Object.assign({ ease: Sine.easeInOut }, TITLE_REST), 0.1, 1.2);
-  return tl;
-}
-
-function titleShimmer(chars) {
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const loop = new TimelineMax({ repeat: -1, repeatDelay: 3.5 });
-  loop.staggerTo(chars, 0.35, Object.assign({ y: -6, ease: Sine.easeOut }, TITLE_GLOW), 0.12, 0)
-  .staggerTo(chars, 0.7, Object.assign({ y: 0, ease: Sine.easeInOut }, TITLE_REST), 0.12, 0.3);
-}
 
 function resetStyle(selector, callback) {
   if (typeof selector === 'string') {
@@ -469,9 +405,108 @@ function spaceWorld(targetElement) {
 
 }
 
+// ---------- S U R E S H chrome morph (GSAP) ----------
+// One chrome shape morphs S → U → R → E → S → H, then a light comet paints the full word SURESH.
+function sureshTitle() {
+  const D = window.SURESH_SHAPES;
+  const mount = document.getElementById('sureshMount');
+  if (!D || !mount) return;
+
+  const [W, H] = D.vb;
+  const cx = W / 2, cy = D.base - D.cap / 2;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wordPaths = (extra) => D.word.map(d => `<path d="${d}" ${extra}/>`).join('');
+
+  mount.innerHTML = `
+  <svg id="sureshSvg" viewBox="0 0 ${W} ${H}" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="sChrome" x1="0" y1="0" x2="1" y2=".8"><stop stop-color="#11141d"/><stop offset=".08" stop-color="#f5fbff"/><stop offset=".16" stop-color="#8297be"/><stop offset=".25" stop-color="#fff"/><stop offset=".42" stop-color="#b5c7ff"/><stop offset=".49" stop-color="#f7fbff"/><stop offset=".51" stop-color="#303842"/><stop offset=".55" stop-color="#d7e3ff"/><stop offset=".72" stop-color="#788dd0"/><stop offset=".89" stop-color="#faffff"/><stop offset="1" stop-color="#384255"/></linearGradient>
+      <linearGradient id="sEdge"><stop stop-color="#f4faff"/><stop offset=".3" stop-color="#6a7484"/><stop offset=".5" stop-color="#fff"/><stop offset=".8" stop-color="#a2b6f8"/><stop offset="1" stop-color="#fff"/></linearGradient>
+      <linearGradient id="sSheen" gradientUnits="userSpaceOnUse" gradientTransform="skewX(-20)" x1="-500" y1="0" x2="-100" y2="0"><stop stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <filter id="sGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
+      <filter id="sBevel" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/><feSpecularLighting in="blur" surfaceScale="12" specularConstant="1.3" specularExponent="32" lighting-color="#ffffff" result="light"><fePointLight x="${W * 0.35}" y="40" z="200"/></feSpecularLighting><feComposite in="light" in2="SourceAlpha" operator="in" result="shine"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shine"/></feMerge></filter>
+      <mask id="sMask" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect id="sMaskRect" x="0" y="0" width="0" height="${H}" fill="#fff"/></mask>
+    </defs>
+    <g id="sLetter">
+      <path id="sShadow" fill="none" stroke="#637dc7" stroke-width="18" opacity=".18" filter="url(#sGlow)" fill-rule="evenodd"/>
+      <path id="sShape" fill="url(#sChrome)" fill-rule="evenodd" stroke="url(#sEdge)" stroke-width="7" stroke-linejoin="round" filter="url(#sBevel)"/>
+      <path id="sOutline" fill="none" stroke="#fff" stroke-width="1" opacity=".6"/>
+    </g>
+    <g mask="url(#sMask)"><g filter="url(#sBevel)">${wordPaths('fill="url(#sChrome)" stroke="url(#sEdge)" stroke-width="5" stroke-linejoin="round"')}</g></g>
+    <g id="sSheenG" opacity="0">${wordPaths('fill="url(#sSheen)"')}</g>
+    <g id="sComet" opacity="0"><circle r="32" fill="#a3bbff" filter="url(#sGlow)" opacity=".8"/><circle r="5" fill="#fff"/><path d="M-45 0H45M0-45V45" stroke="#fff" stroke-width="1.5"/><path d="M-19-19 19 19M-19 19 19-19" stroke="#c3d4ff"/></g>
+    <g id="sStars" fill="#fff"></g>
+  </svg>`;
+
+  const $s = id => document.getElementById(id);
+  const letterEls = [$s('sShadow'), $s('sShape'), $s('sOutline')];
+  const st = D.stages;
+
+  // Interpolate two matching point lists (outer outline + counter) into one even-odd path.
+  function draw(a, b, t) {
+    let d = '';
+    const ring = (A, B) => {
+      for (let i = 0; i < A.length; i += 2) {
+        d += (i ? 'L' : 'M') + (A[i] + (B[i] - A[i]) * t).toFixed(1) + ' ' + (A[i + 1] + (B[i + 1] - A[i + 1]) * t).toFixed(1);
+      }
+      d += 'Z';
+    };
+    ring(a.o, b.o);ring(a.h, b.h);
+    letterEls.forEach(p => p.setAttribute('d', d));
+  }
+  draw(st[0], st[0], 0);
+
+  function startSheen() {
+    if (reduced) return;
+    TweenMax.set('#sSheenG', { opacity: 1 });
+    TweenMax.fromTo('#sSheen', 1.6, { attr: { x1: -500, x2: -100 } }, { attr: { x1: W + 100, x2: W + 500 }, ease: Power2.easeInOut, repeat: -1, repeatDelay: 4.5 });
+  }
+
+  // Reduced motion: show the finished word straight away.
+  if (reduced) {
+    $s('sMaskRect').setAttribute('width', W);
+    $s('sLetter').style.display = 'none';
+    return;
+  }
+
+  const origin = `${cx} ${cy}`;
+  const m = { t: 0 };
+  TweenMax.set('#sLetter', { autoAlpha: 0, svgOrigin: origin });
+  TweenMax.set('#sComet', { x: 0, y: cy });
+
+  const tl = new TimelineMax({ delay: 1.4, onComplete: startSheen });
+  tl.fromTo('#sLetter', 1.2, { autoAlpha: 0, scale: 0.72 }, { autoAlpha: 1, scale: 1, ease: Expo.easeOut }, 0);
+
+  for (let i = 1; i < 6; i++) {
+    const t = 1.5 + (i - 1) * 1.65, a = st[i - 1], b = st[i];
+    tl.fromTo(m, 1.1, { t: 0 }, { t: 1, ease: Power3.easeInOut, onUpdate: () => draw(a, b, m.t) }, t);
+    tl.to('#sLetter', 0.5, { rotation: i % 2 ? -3 : 3, ease: Sine.easeInOut, yoyo: true, repeat: 1 }, t);
+  }
+
+  // Reveal: the chrome shape shrinks away while a comet paints the full word left → right.
+  const end = 10.25, sweep = 3.2;
+  tl.to('#sLetter', 0.8, { scale: 0.42, autoAlpha: 0, ease: Power3.easeIn }, end - 0.6);
+  tl.to('#sComet', 0.2, { autoAlpha: 1 }, end);
+  tl.to('#sMaskRect', sweep, { attr: { width: W }, ease: Linear.easeNone }, end);
+  tl.fromTo('#sComet', sweep, { x: 0 }, { x: W, ease: Linear.easeNone }, end);
+  tl.to('#sComet', 0.4, { autoAlpha: 0 }, end + sweep - 0.3);
+
+  // Little sparkles as the word completes.
+  const starsG = $s('sStars');
+  [0.12, 0.38, 0.62, 0.88].forEach((f, i) => {
+    const x = W * f, y = D.base - D.cap * (i % 2 ? 0.2 : 0.8);
+    const star = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    star.setAttribute('d', `M${x - 20} ${y}Q${x} ${y} ${x} ${y - 25}Q${x} ${y} ${x + 20} ${y}Q${x} ${y} ${x} ${y + 25}Q${x} ${y} ${x - 20} ${y}`);
+    starsG.appendChild(star);
+    TweenMax.set(star, { opacity: 0, svgOrigin: `${x} ${y}` });
+    tl.to(star, 0.35, { opacity: 0.9, scale: 1.4, yoyo: true, repeat: 1 }, end + sweep - 0.5 + i * 0.24);
+  });
+}
+
 new Vue({
   el: "#app",
   mounted() {
     introAnimation.call(this);
+    sureshTitle();
     spaceWorld(document.getElementById('starfield'));
   } });

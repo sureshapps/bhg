@@ -43,19 +43,17 @@ h1 {
   left: 0;
 }
 #header h1 {
-  font-size: 9vw;
-  line-height: 1;
-  letter-spacing: 0.32em;
-  color: #d9d9e0;
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+  margin: 0;
+  line-height: 0;
 }
-#header h1 span {
-  display: inline-block;
-  margin-right: -0.32em; /* cancel trailing letter-spacing so S U R E S H stays centred */
+#sureshMount {
+  display: block;
 }
-#header h1 .char {
-  display: inline-block;
-  will-change: transform, opacity;
+#sureshSvg {
+  display: block;
+  width: min(52vw, 1000px);
+  height: auto;
+  overflow: visible;
 }
 #header .ui-mini-text {
   grid-row: 3/4;
@@ -161,6 +159,7 @@ h1 {
 .ui-grid .ui-box {
   grid-row: 2/3;
   grid-column: 2/3;
+  padding: 2.2vw 5vw;
   text-align: center;
   display: flex;
   align-items: center;
@@ -169,28 +168,6 @@ h1 {
 
 .title {
   position: relative;
-}
-.title .line:first-of-type > .word:first-of-type > .char:first-of-type::before {
-  content: "";
-  position: absolute;
-  top: -1vh;
-  left: -1vw;
-  width: 0.75vw;
-  height: 0.75vw;
-  border-left: 2px solid #ffffff;
-  border-top: 2px solid #ffffff;
-  animation: 0.1s blink linear infinite 0.2s;
-}
-.title .line:last-of-type > .word:last-of-type > .char:last-of-type::after {
-  content: "";
-  position: absolute;
-  bottom: -1vh;
-  right: -2vw;
-  width: 1.5vw;
-  height: 1.5vw;
-  border-top: 2px solid #ffffff;
-  border-radius: 2px 0 0 0;
-  animation: 0.1s blink linear infinite 0.2s;
 }
 
 section {
@@ -697,4 +674,14 @@ section .col-narrow {
   right: 0;
   left: 0;
   bottom: 0;
+}
+@media (max-width: 700px) {
+  .ui-grid .ui-box {
+    grid-column: 1/4;
+    margin: 0 11vw;
+    padding: 4vh 3vw;
+  }
+  #sureshSvg {
+    width: 100%;
+  }
 }
