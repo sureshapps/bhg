@@ -212,7 +212,7 @@ void main(void) {
 <div class="rv-stage" id="rvStage"><div class="rv-glow"></div><div class="rv-floor"></div>
 <div class="rv-pod" id="rvPod"><video id="rvVideo" muted loop playsinline preload="auto" disablepictureinpicture></video></div>
 <div class="rv-scan"></div><div class="rv-beam"></div>
-<div class="rv-hud" id="rvHud"><span class="rv-chip a">Subject 01</span><span class="rv-chip b">Pod stable</span><span class="rv-chip c">Rot <b id="rvChipRot">000</b>°</span><span class="rv-chip d">Depth map</span></div>
+<div class="rv-hud" id="rvHud"></div>
 <i class="sc-c tl"></i><i class="sc-c tr"></i><i class="sc-c bl"></i><i class="sc-c br"></i>
 <div class="rv-term"><div class="rv-tbar"><i></i><i></i><i></i><span>reality.sh</span></div><div id="rvLog"></div><div class="ln live" id="rvLive"><span class="p">&gt;</span> rotation <b id="rvRot">000&deg;</b> &middot; 30 fps</div><div class="ln"><span class="p">$</span> <u class="cur"></u></div></div>
 </div></section>
@@ -792,7 +792,7 @@ function startReal(){
 gsap.ticker.add(()=>{
   if(!rvOn||!rv.duration)return;
   const d=Math.round(rv.currentTime/rv.duration*360)%360,t=String(d).padStart(3,'0');
-  $('rvRot').textContent=t+'\u00b0';$('rvChipRot').textContent=t;
+  $('rvRot').textContent=t+'\u00b0';
 });
 if(!reduce){
   gsap.set(pod,{transformPerspective:900});
