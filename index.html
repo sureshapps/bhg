@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="preconnect" href="https://hello.suresh.app">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>• SURESH</title>
+<title>Neon Line Portrait</title>
 <style>
 :root{--bg:#05060d;--c1:#00f0ff;--c2:#ff3d5a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;margin:0}
@@ -76,8 +76,6 @@ body{--sw:min(41.3vh,43vw);--sx:min(calc(50vw + 15.6vh),calc(100vw - var(--sw)*1
 #gate .ld button:disabled{opacity:0;visibility:hidden;pointer-events:none}
 #gate .ld button:hover{background:#fff;color:#000}
 #gate .ld button:focus-visible{outline:none;background:#fff;color:#000}
-html.leaving,html.leaving body{background:#000!important}
-html.leaving body>*:not(#gate){visibility:hidden!important}
 @media (max-height:520px){#gate .purse{transform:scale(.62)}#gate .ld{top:calc(50% + 112px)}}
 @media (prefers-reduced-motion:reduce){#gate .coin{animation:none}}
 #enterBanner{position:fixed;left:max(16px,3.2vw);bottom:calc(max(14px,4vh) + env(safe-area-inset-bottom,0px));width:clamp(214px,39vw,300px);height:clamp(110px,15.5vh,142px);z-index:6;display:block;text-decoration:none;opacity:0;visibility:hidden;pointer-events:none;-webkit-tap-highlight-color:transparent;color:#fff;font-family:'Space Mono',ui-monospace,Menlo,monospace}
@@ -592,19 +590,19 @@ window.SFX=(function(){
 (function(){
   const gate=document.getElementById('gate');
   let started=false;
-  var DEST='https://hello.suresh.app/';
   function go(){
-    if(started)return;started=true;
-    try{SFX.unlock(true);SFX.click&&SFX.click();}catch(e){}
-    // Whole page slides down off-screen over black, then we open the site.
-    document.documentElement.classList.add('leaving');
-    gate.style.pointerEvents='none';
-    var done=false;function nav(){if(done)return;done=true;location.href=DEST;}
-    gate.style.transition='transform .9s cubic-bezier(.76,0,.24,1)';
-    void gate.offsetHeight;
-    gate.style.transform='translateY(100%)';
-    gate.addEventListener('transitionend',nav,{once:true});
-    setTimeout(nav,1100);
+    if(started)return;started=true;SFX.unlock(true);SFX.click&&SFX.click();
+    // Background track starts as soon as the person enters (the click allows autoplay).
+    try{
+      const bgm=window.__bgmPre||new Audio('https://github.com/sureshapps/bhg/raw/refs/heads/main/onesunmoonbgm.MP3');
+      bgm.loop=true;bgm.preload='auto';bgm.volume=0;window.__bgm=bgm;
+      const pr=bgm.play();
+      const retry=()=>{bgm.paused&&!bgm.ended&&bgm.currentTime===0&&bgm.play().catch(()=>{})};
+      if(pr&&pr.catch)pr.catch(()=>{['pointerdown','keydown','touchstart'].forEach(ev=>window.addEventListener(ev,retry,{once:true}))});
+      gsap.to(bgm,{volume:.7,duration:2,ease:'power1.out'});
+    }catch(e){}
+    if(window.gsap)gsap.to(gate,{opacity:0,duration:.6,ease:'power1.out',onComplete:()=>gate.remove()});else gate.remove();
+    setTimeout(()=>window.startIntro&&window.startIntro(),250);
   }
   document.getElementById('ldGo').addEventListener('click',go);
 })();
@@ -676,7 +674,21 @@ function showChip(){
 const sn=window.signNow;
 if(sn)window.signNow=function(){showChip();return sn.apply(this,arguments)};
 else showChip();
-el.addEventListener('click',()=>{window.SFX&&SFX.click&&SFX.click()});
+var DEST='https://hello.suresh.app/',leaving=false;
+el.addEventListener('click',e=>{
+  e.preventDefault();if(leaving)return;leaving=true;
+  window.SFX&&SFX.click&&SFX.click();
+  el.style.pointerEvents='none';
+  // Whole page slides down off-screen over black, then the site opens.
+  const h=document.documentElement,b=document.body;
+  h.style.background='#000';h.style.overflow='hidden';
+  b.style.transition='transform .9s cubic-bezier(.76,0,.24,1)';
+  void b.offsetHeight;
+  b.style.transform='translateY(100%)';
+  const c=b;
+  let done=false;const nav=()=>{if(done)return;done=true;location.href=DEST};
+  c.addEventListener('transitionend',ev=>{if(ev.target===b&&ev.propertyName==='transform')nav()});setTimeout(nav,1100);
+});
 // Magnetic pull toward the pointer (Venumity magnetic button)
 if(!reduce&&matchMedia('(hover:hover)').matches){
   const qx=gsap.quickTo(el,'x',{duration:.5,ease:'power3.out'}),qy=gsap.quickTo(el,'y',{duration:.5,ease:'power3.out'});
