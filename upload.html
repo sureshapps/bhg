@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exam Bot AI Study Assistant</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+html, body{ width:100%; height:100%; overflow:hidden; font-family:'DM Sans', sans-serif; color:#fff; }
+
+:root{
+  --green:#168B52;
+  --accent:#91EB8A;
+  --pill:rgba(255,255,255,0.12);
+  --text-72:rgba(255,255,255,0.72);
+  --text-60:rgba(255,255,255,0.6);
+}
+
+a{ text-decoration:none; color:inherit; }
+button{ font-family:inherit; cursor:pointer; }
+
+.stage{ position:fixed; inset:0; overflow:hidden; background:#000; }
+
+/* 1. Background video */
+.bg-video{ position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
+
+.bottom-fade{
+  position:fixed; left:0; bottom:0; width:100%; height:152px;
+  background:linear-gradient(to bottom, rgba(0,0,0,0) 0%, #000 100%);
+  z-index:2; pointer-events:none;
+}
+
+/* 2. Header */
+.header{
+  position:fixed; left:40px; top:22px; right:50px; z-index:10;
+  display:flex; justify-content:space-between; align-items:center; gap:44px;
+}
+.header-nav{ flex:1; display:flex; justify-content:space-between; align-items:center; }
+.header-left{ display:flex; align-items:center; gap:66px; }
+.logo{ width:18px; height:18px; display:block; }
+.nav-pill{ display:flex; gap:32px; }
+.nav-pill a{
+  font-size:16px; line-height:24px; text-transform:capitalize;
+  color:var(--text-72); transition:color 0.2s;
+}
+.nav-pill a:hover{ color:#fff; }
+
+.header-auth{ display:flex; gap:8px; }
+.header-auth button{
+  height:44px; padding:10px 20px; border-radius:999px; border:none;
+  background:var(--pill); color:#fff; font-size:16px; text-transform:capitalize;
+  transition:background 0.2s;
+}
+.header-auth button:hover{ background:rgba(255,255,255,0.22); }
+
+.header-rail{ display:flex; flex-direction:column; gap:16px; align-items:center; }
+.header-rail img, .bottom-rail img{ width:18px; height:18px; opacity:0.85; display:block; }
+
+/* 3. Hero title */
+.hero-title{
+  position:fixed; left:124px; top:115px; width:472px; z-index:10;
+  font-size:70px; line-height:70px; letter-spacing:-3.4px; font-weight:400;
+  white-space:nowrap;
+}
+.hero-title .accent{
+  background:linear-gradient(90deg, #8ac3eb 0%, rgba(8, 103, 141, 0.5) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+/* 4. Hero subtitle */
+.hero-sub{
+  position:fixed; left:124px; top:270px; width:446px; z-index:10;
+  font-size:20px; line-height:24px; color:#fff;
+}
+
+/* 5. Bottom rail + caption */
+.bottom-row{
+  position:fixed; left:43px; bottom:29px; right:44px; z-index:10;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.bottom-rail{ display:flex; gap:14px; align-items:center; }
+.bottom-caption{ display:flex; gap:18px; max-width:447px; align-items:flex-start; }
+.bottom-caption img{ width:13.66px; height:13.66px; flex-shrink:0; margin-top:5px; }
+.bottom-caption p{ font-size:20px; line-height:24px; color:#fff; }
+
+/* 6. Floating file cards */
+.card-box{
+  position:fixed; display:flex; align-items:center; justify-content:center;
+  z-index:10; pointer-events:none;
+}
+.file-card{
+  width:211.893px; backdrop-filter:blur(31.328px); -webkit-backdrop-filter:blur(31.328px);
+  background:rgba(255,255,255,0.08); border-radius:18.8px; padding:18.8px;
+  display:flex; flex-direction:column; gap:17.2px; pointer-events:auto;
+  opacity:0;
+  transform:translateY(90px) scale(0.6) rotate(var(--rot));
+  animation:cardPop 0.75s cubic-bezier(0.22, 1.6, 0.4, 1) forwards;
+}
+.file-card .row{ display:flex; justify-content:space-between; align-items:flex-start; }
+.file-card .label{ font-size:15.7px; line-height:18.8px; }
+.file-card .icon{ position:relative; width:26.6px; height:26.6px; flex-shrink:0; }
+.file-card .icon .folder{ width:100%; height:100%; display:block; }
+.file-card .icon .glyph{ position:absolute; display:block; }
+.file-card .desc{ font-family:'Poppins', sans-serif; font-size:15.7px; line-height:18.8px; }
+.file-card .desc.small{ font-size:11px; }
+.file-card .desc .dim{ color:rgba(255,255,255,0.7); }
+
+#box-png{ left:142px; top:354.47px; width:233.93px; height:279.59px; }
+#card-png{ height:262.12px; --rot:-5deg; animation-delay:0.2s; }
+
+#box-doc{ left:204.4px; top:368.33px; width:229.32px; height:226.92px; }
+#card-doc{ height:209.24px; --rot:5deg; animation-delay:0.5s; }
+
+#box-pdf{ left:174.21px; top:415.32px; width:211.89px; height:209.24px; overflow:hidden; border-radius:18.8px; }
+#card-pdf{ height:209.24px; position:relative; z-index:1; background:rgba(255,255,255,0.08); --rot:0deg; animation-delay:0.8s; }
+
+#glyph-png{ width:54%; height:54%; left:23%; top:33%; }
+#glyph-doc{ width:38%; height:26%; left:26%; top:44%; }
+
+@keyframes cardPop{
+  0%{ opacity:0; transform:translateY(90px) scale(0.6) rotate(var(--rot)); }
+  65%{ opacity:1; transform:translateY(-14px) scale(1.05) rotate(var(--rot)); }
+  100%{ opacity:1; transform:translateY(0) scale(1) rotate(var(--rot)); }
+}
+
+/* 7. Upload button */
+.upload-btn{
+  position:fixed; left:142.88px; top:583.71px; width:274.12px; height:70.49px; z-index:11;
+  display:flex; align-items:center; justify-content:center;
+  background:#fff; border:none; border-radius:25px; overflow:hidden;
+  color:#000;
+  transition:transform 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+  clip-path:inset(0 50% 0 50% round 25px);
+  animation:btnWipeIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) 1.15s forwards;
+}
+.upload-btn::before{
+  content:""; position:absolute; inset:0; z-index:0;
+  background:linear-gradient(90deg, var(--accent), var(--green));
+  transform-origin:center; transform:scaleX(0);
+  transition:transform 0.35s ease;
+}
+.upload-btn span{ position:relative; z-index:1; font-weight:600; font-size:15.7px; color:inherit; }
+.upload-btn:hover{
+  transform:scale(1.06); color:#fff;
+  box-shadow:0 12px 30px rgba(145,235,138,0.4);
+}
+.upload-btn:hover::before{ transform:scaleX(1); }
+
+@keyframes btnWipeIn{
+  from{ clip-path:inset(0 50% 0 50% round 25px); }
+  to{ clip-path:inset(0 0 0 0 round 25px); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .file-card{ opacity:1; animation:none; transform:rotate(var(--rot)); }
+  .upload-btn{ clip-path:none; animation:none; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- 1. Background video -->
+  <video class="bg-video" autoplay muted loop playsinline>
+    <source src="https://raw.githubusercontent.com/sureshapps/bhg/main/skbg.mp4" type="video/mp4">
+    <source src="https://api.promptsites.net/s3/promptsites/previews/dadc0597-ab41-465c-8fd6-a1c5e5a868c2.mp4" type="video/mp4">
+  </video>
+  <div class="bottom-fade"></div>
+
+  <!-- 2. Header -->
+  <header class="header">
+    <div class="header-nav">
+      <div class="header-left">
+        <img class="logo" src="https://api.promptsites.net/s3/promptsites/previews/b35ac67d-21ab-4e9e-a75f-1c0d3698a5f9.png" alt="Examix logo">
+        <nav class="nav-pill">
+          <a href="#features">features</a>
+          <a href="#how-it-works">how it works</a>
+          <a href="#pricing">pricing</a>
+          <a href="#about">about</a>
+        </nav>
+      </div>
+      <div class="header-auth">
+        <button type="button">Log In</button>
+        <button type="button">Sign Up</button>
+      </div>
+    </div>
+    <div class="header-rail">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/d623e490-a7aa-408e-b8bc-8fea5ee1dd8b.png" alt="">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/3d7a6721-052b-4e9a-b5a0-2ffa432641e5.png" alt="">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/ea9c2502-d51a-4776-8ded-f9ccb844b9f3.png" alt="">
+    </div>
+  </header>
+
+  <!-- 3. Hero title -->
+  <h1 class="hero-title"><span id="typeLine1"></span><br><span class="accent" id="typeLine2"></span></h1>
+
+  <!-- 4. Hero subtitle -->
+  <p class="hero-sub">Examix is your virtual assistant that simplifies the research process effortlessly.</p>
+
+  <!-- 5. Bottom rail + caption -->
+  <div class="bottom-row">
+    <div class="bottom-rail">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/bce05995-db47-4574-8c95-01d39c3eb752.png" alt="">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/3d7a6721-052b-4e9a-b5a0-2ffa432641e5.png" alt="">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/2c782bcc-dac8-4ff0-890f-9b60fc7cbf7d.png" alt="">
+    </div>
+    <div class="bottom-caption">
+      <img src="https://api.promptsites.net/s3/promptsites/previews/30505321-3a4b-4bef-8b7a-700d71e2004b.png" alt="">
+      <p>Upload your file to Examix and it will help you prepare for the exam quickly and painlessly.</p>
+    </div>
+  </div>
+
+  <!-- 6. Floating file cards -->
+  <div class="card-box" id="box-png">
+    <div class="file-card" id="card-png">
+      <div class="row">
+        <span class="label">PNG File</span>
+        <div class="icon">
+          <img class="folder" src="https://api.promptsites.net/s3/promptsites/previews/dd79b129-5b3a-440d-b743-decb0c3c1610.png" alt="">
+          <img class="glyph" id="glyph-png" src="https://api.promptsites.net/s3/promptsites/previews/45998587-19b8-4500-b382-5b36b7f061d0.png" alt="">
+        </div>
+      </div>
+      <p class="desc"><b>Just upload</b> <span class="dim">your PNG to</span> <b>instantly start</b> <span class="dim">analyzing, sharing, or securely saving it.</span></p>
+    </div>
+  </div>
+
+  <div class="card-box" id="box-doc">
+    <div class="file-card" id="card-doc">
+      <div class="row">
+        <span class="label">DOC File</span>
+        <div class="icon">
+          <img class="folder" src="https://api.promptsites.net/s3/promptsites/previews/83d47cf0-bdf5-49f0-be2b-903a25e04b62.png" alt="">
+          <img class="glyph" id="glyph-doc" src="https://api.promptsites.net/s3/promptsites/previews/879bcd37-28dd-48f6-b45f-939cfdd2a4e2.png" alt="">
+        </div>
+      </div>
+      <p class="desc small"><b>Easily upload</b> <span class="dim">your PDF file to begin analyzing, sharing, or storing it securely in seconds.</span></p>
+    </div>
+  </div>
+
+  <div class="card-box" id="box-pdf">
+    <div class="file-card" id="card-pdf">
+      <div class="row">
+        <span class="label">PDF File</span>
+        <div class="icon">
+          <img class="folder" src="https://api.promptsites.net/s3/promptsites/previews/6ae6b557-85a3-45d2-91c4-cc96c9a2945b.png" alt="">
+        </div>
+      </div>
+      <p class="desc"><b>Easily upload</b> <span class="dim">your PDF file to begin analyzing, sharing, or storing it securely in seconds.</span></p>
+    </div>
+  </div>
+
+  <!-- 7. Upload button -->
+  <button type="button" class="upload-btn"><span>Upload File</span></button>
+
+</div>
+
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var line1 = document.getElementById('typeLine1');
+  var line2 = document.getElementById('typeLine2');
+  var text1 = 'Exam Bot AI';
+  var text2 = 'Study Assistant';
+
+  if (reduceMotion){
+    line1.textContent = text1;
+    line2.textContent = text2;
+    return;
+  }
+
+  function typeInto(el, text, speed, onDone){
+    var i = 0;
+    (function step(){
+      if (i <= text.length){
+        el.textContent = text.slice(0, i);
+        i++;
+        setTimeout(step, speed);
+      } else if (onDone){
+        onDone();
+      }
+    })();
+  }
+
+  typeInto(line1, text1, 55, function(){
+    typeInto(line2, text2, 55);
+  });
+})();
+</script>
+</body>
+</html>
